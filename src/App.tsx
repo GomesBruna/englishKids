@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut, PlayCircle } from 'lucide-react';
+import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut, PlayCircle, Apple } from 'lucide-react';
 import { CategoryButton } from './components/CategoryButton';
 import { LearningCard } from './components/LearningCard';
 import { ProgressBar } from './components/ProgressBar';
@@ -12,13 +12,14 @@ import { useLearningItems } from './hooks/useLearningItems';
 import { useAuth } from './contexts/AuthContext';
 
 //type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
-type Category = 'colors' | 'numbers' | 'animals';
+type Category = 'colors' | 'numbers' | 'animals' | ' fruits';
 type GameMode = 'learn' | 'memory' | 'pronunciation' | 'quiz' | 'video' | null;
 
 const categories = [
   { id: 'colors' as Category, icon: Palette, label: 'Cores', color: 'bg-gradient-to-br from-red-400 to-pink-500', videoUrl: 'https://www.youtube.com/embed/SLZcWGQQsmg?si=dBv_FX9NTgEQlHLX' },
   { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500', videoUrl: 'https://www.youtube.com/embed/o0IsBUaoTrQ?si=-_mWrNnpK_kBrPov'  },
   { id: 'animals' as Category, icon: Rabbit, label: 'Animais', color: 'bg-gradient-to-br from-green-400 to-emerald-500', videoUrl: 'https://www.youtube.com/embed/4jeHK_9NiXI?si=PV_jHNHRJ_lIkQrA' },
+  { id: 'fruits' as Category, icon: Apple, label: 'Fruits', color: 'bg-gradient-to-br from-green-400 to-green-500', videoUrl: 'https://www.youtube.com/embed/mfReSbQ7jzE?si=iJAYpjNmff-VLOLG' }
   //{ id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
 ];
 
