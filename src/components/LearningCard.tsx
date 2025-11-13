@@ -64,7 +64,6 @@ export const LearningCard = ({ item, onComplete }: LearningCardProps) => {
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
               <Volume2 className="w-16 h-16 text-white mx-auto mb-4" />
               <p className="text-white text-2xl font-bold mb-2">{item.english_word}</p>
-              <p className="text-blue-100 text-xl mb-4">/{item.pronunciation}/</p>
               <p className="text-white text-3xl font-bold">{item.portuguese_word}</p>
             </div>
           </div>

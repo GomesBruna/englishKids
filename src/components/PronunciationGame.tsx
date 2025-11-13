@@ -113,7 +113,6 @@ export const PronunciationGame = ({ items, onComplete, onBack }: PronunciationGa
           </div>
 
           <h3 className="text-5xl font-bold text-gray-800 mb-4">{currentItem.english_word}</h3>
-          <p className="text-xl text-gray-500 mb-2">/{currentItem.pronunciation}/</p>
           <p className="text-2xl text-gray-600 mb-8">{currentItem.portuguese_word}</p>
 
           <div className="flex justify-center gap-4 mb-6">
