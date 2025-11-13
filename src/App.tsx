@@ -199,13 +199,13 @@ function App() {
                 color="bg-gradient-to-br from-purple-400 to-pink-500"
                 onClick={() => setGameMode('memory')}
               />
-              <GameModeButton
+              {/* <GameModeButton
                 icon={Mic}
                 title="Pratique Falar"
                 description="Fale as palavras e receba feedback"
                 color="bg-gradient-to-br from-green-400 to-emerald-500"
                 onClick={() => setGameMode('pronunciation')}
-              />
+              /> */}
               <GameModeButton
                 icon={Target}
                 title="Quiz"
