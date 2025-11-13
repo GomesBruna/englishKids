@@ -11,14 +11,15 @@ import { LoginPage } from './components/LoginPage';
 import { useLearningItems } from './hooks/useLearningItems';
 import { useAuth } from './contexts/AuthContext';
 
-type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
+//type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
+type Category = 'colors' | 'numbers' | 'animals';
 type GameMode = 'learn' | 'memory' | 'pronunciation' | 'quiz' | null;
 
 const categories = [
   { id: 'colors' as Category, icon: Palette, label: 'Cores', color: 'bg-gradient-to-br from-red-400 to-pink-500' },
   { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
   { id: 'animals' as Category, icon: Rabbit, label: 'Animais', color: 'bg-gradient-to-br from-green-400 to-emerald-500' },
-  { id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
+  //{ id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
 ];
 
 function App() {
