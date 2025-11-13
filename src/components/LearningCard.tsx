@@ -45,11 +45,11 @@ export const LearningCard = ({ item, onComplete }: LearningCardProps) => {
           className="absolute inset-0 bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center backface-hidden"
           style={{ backfaceVisibility: 'hidden' }}
         >
-          <div className="w-full h-48 mb-6 rounded-xl overflow-hidden shadow-lg">
+          <div className="w-full h-48 mb-6 rounded-xl bg-gray-50 shadow-lg flex items-center justify-center p-4">
             <img
               src={item.image_url}
               alt={item.english_word}
-              className="w-full h-full object-cover"
+              className="max-h-full max-w-full object-contain"
             />
           </div>
           <h2 className="text-4xl font-bold text-gray-800 mb-2">{item.english_word}</h2>
