@@ -16,6 +16,7 @@ interface Card {
   itemId: string;
   isFlipped: boolean;
   isMatched: boolean;
+  spoke: string
 }
 
 export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
@@ -30,14 +31,15 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
 
   const initializeGame = () => {
     const gameCards: Card[] = [];
-    items.slice(0, 6).forEach((item) => {
+    items.forEach((item) => {
       gameCards.push({
         id: `word-${item.id}`,
-        content: item.english_word,
-        type: 'word',
+        content: item.image_url,
+        type: 'image',
         itemId: item.id,
         isFlipped: false,
         isMatched: false,
+        spoke:item.english_word
       });
       gameCards.push({
         id: `image-${item.id}`,
@@ -46,6 +48,7 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
         itemId: item.id,
         isFlipped: false,
         isMatched: false,
+        spoke:item.english_word
       });
     });
 
@@ -67,9 +70,7 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
     newCards[index].isFlipped = true;
     setCards(newCards);
 
-    if (cards[index].type === 'word') {
-      speak(cards[index].content);
-    }
+    speak(cards[index].spoke);
 
     if (newFlippedCards.length === 2) {
       setMoves(moves + 1);
@@ -133,12 +134,12 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
             </div>
             <div>
               <p className="text-gray-600 text-sm">Pares</p>
-              <p className="text-3xl font-bold text-green-600">{matches}/6</p>
+              <p className="text-3xl font-bold text-green-600">{matches}/{items.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
           {cards.map((card, index) => (
             <button
               key={card.id}

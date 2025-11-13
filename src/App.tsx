@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut } from 'lucide-react';
+import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut, PlayCircle } from 'lucide-react';
 import { CategoryButton } from './components/CategoryButton';
 import { LearningCard } from './components/LearningCard';
 import { ProgressBar } from './components/ProgressBar';
@@ -11,14 +11,15 @@ import { LoginPage } from './components/LoginPage';
 import { useLearningItems } from './hooks/useLearningItems';
 import { useAuth } from './contexts/AuthContext';
 
-type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
-type GameMode = 'learn' | 'memory' | 'pronunciation' | 'quiz' | null;
+//type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
+type Category = 'colors' | 'numbers' | 'animals';
+type GameMode = 'learn' | 'memory' | 'pronunciation' | 'quiz' | 'video' | null;
 
 const categories = [
-  { id: 'colors' as Category, icon: Palette, label: 'Cores', color: 'bg-gradient-to-br from-red-400 to-pink-500' },
-  { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
-  { id: 'animals' as Category, icon: Rabbit, label: 'Animais', color: 'bg-gradient-to-br from-green-400 to-emerald-500' },
-  { id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
+  { id: 'colors' as Category, icon: Palette, label: 'Cores', color: 'bg-gradient-to-br from-red-400 to-pink-500', videoUrl: 'https://www.youtube.com/embed/SLZcWGQQsmg?si=dBv_FX9NTgEQlHLX' },
+  { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500', videoUrl: 'https://www.youtube.com/embed/o0IsBUaoTrQ?si=-_mWrNnpK_kBrPov'  },
+  { id: 'animals' as Category, icon: Rabbit, label: 'Animais', color: 'bg-gradient-to-br from-green-400 to-emerald-500', videoUrl: 'https://www.youtube.com/embed/4jeHK_9NiXI?si=PV_jHNHRJ_lIkQrA' },
+  //{ id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
 ];
 
 function App() {
@@ -200,12 +201,19 @@ function App() {
                 onClick={() => setGameMode('memory')}
               />
               <GameModeButton
+                icon={PlayCircle}
+                title="Vídeos"
+                description="Assista um vídeo desta categoria"
+                color="bg-gradient-to-br from-emerald-400 to-lime-500"
+                onClick={() => setGameMode('video')}
+              />
+              {/* <GameModeButton
                 icon={Mic}
                 title="Pratique Falar"
                 description="Fale as palavras e receba feedback"
                 color="bg-gradient-to-br from-green-400 to-emerald-500"
                 onClick={() => setGameMode('pronunciation')}
-              />
+              /> */}
               <GameModeButton
                 icon={Target}
                 title="Quiz"
@@ -253,6 +261,54 @@ function App() {
             >
               Escolher Categoria
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameMode === 'video' && selectedCategory) {
+    const categoryInfo = categories.find(c => c.id === selectedCategory);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={handleBackToModes}
+              className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            >
+              ← Voltar
+            </button>
+            <div className={`${categoryInfo?.color} text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg`}>
+              {categoryInfo?.label}
+            </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+              <PlayCircle className="w-8 h-8 text-purple-500" />
+              Vídeo da categoria
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Assista ao vídeo e repita as palavras em voz alta para praticar a pronúncia.
+            </p>
+            {categoryInfo?.videoUrl ? (
+              <div className="aspect-video bg-black rounded-2xl overflow-hidden shadow-lg">
+                <iframe
+                  src={`${categoryInfo.videoUrl}?rel=0`}
+                  title={`Vídeo de ${categoryInfo.label}`}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-16">
+                Nenhum vídeo disponível para esta categoria ainda.
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -98,7 +98,6 @@ export const QuizGame = ({ items, onComplete, onBack }: QuizGameProps) => {
           <div className="text-center mb-6">
             <p className="text-gray-600 text-lg mb-2">Qual imagem corresponde?</p>
             <p className="text-4xl font-bold text-gray-800">{currentItem.english_word}</p>
-            <p className="text-xl text-gray-500 mt-2">/{currentItem.pronunciation}/</p>
           </div>
         </div>
 
