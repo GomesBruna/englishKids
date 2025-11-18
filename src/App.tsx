@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut, PlayCircle, Apple } from 'lucide-react';
 import { CategoryButton } from './components/CategoryButton';
 import { LearningCard } from './components/LearningCard';
@@ -30,8 +30,43 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
 
   const { items, loading } = useLearningItems(selectedCategory || 'colors');
+
+  useEffect(() => {
+    let isMounted = true;
+    setAssetsReady(false);
+
+    const preload = async () => {
+      if (!items.length) {
+        setAssetsReady(true);
+        return;
+      }
+
+      await Promise.all(
+        items.map(
+          (item) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              img.src = item.image_url;
+            })
+        )
+      );
+
+      if (isMounted) {
+        setAssetsReady(true);
+      }
+    };
+
+    preload();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [items]);
 
   if (authLoading) {
     return (
@@ -150,6 +185,17 @@ function App() {
               </ul>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !assetsReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-xl text-gray-600">Carregando imagens...</p>
         </div>
       </div>
     );
