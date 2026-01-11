@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Users, School, BookOpen, PenTool, Play, Pause, ChevronRight, Loader2, Volume2 } from 'lucide-react';
+import { Users, School, BookOpen, PenTool, Play, Pause, ChevronRight, Loader2, Volume2, PlayCircle, Video } from 'lucide-react';
 import { useClassCategories } from '../hooks/useClassCategories';
 import { ClassCategoryWithLessons, LessonWithAudios, LessonAudio } from '../lib/supabase';
 
@@ -17,7 +17,7 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
     const { categories, loading, error } = useClassCategories();
     const [selectedCategory, setSelectedCategory] = useState<ClassCategoryWithLessons | null>(null);
     const [selectedLesson, setSelectedLesson] = useState<LessonWithAudios | null>(null);
-    const [mode, setMode] = useState<'class' | 'practice' | null>(null);
+    const [mode, setMode] = useState<'class' | 'practice' | 'video' | null>(null);
     const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -58,6 +58,26 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
         setMode(null);
     };
 
+    const currentLessonIndex = selectedCategory?.lessons.findIndex(l => l.id === selectedLesson?.id) ?? -1;
+    const hasNextLesson = selectedCategory && currentLessonIndex < selectedCategory.lessons.length - 1;
+    const hasPrevLesson = currentLessonIndex > 0;
+
+    const handleNextLesson = () => {
+        if (hasNextLesson && selectedCategory) {
+            if (audioRef.current) audioRef.current.pause();
+            setPlayingAudioId(null);
+            setSelectedLesson(selectedCategory.lessons[currentLessonIndex + 1]);
+        }
+    };
+
+    const handlePrevLesson = () => {
+        if (hasPrevLesson && selectedCategory) {
+            if (audioRef.current) audioRef.current.pause();
+            setPlayingAudioId(null);
+            setSelectedLesson(selectedCategory.lessons[currentLessonIndex - 1]);
+        }
+    };
+
     // Loading state
     if (loading) {
         return (
@@ -88,6 +108,67 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
         );
     }
 
+    // Show category videos
+    if (selectedCategory && mode === 'video') {
+        const videos = selectedCategory.videos;
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+                <div className="container mx-auto px-4 py-8">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <button
+                            onClick={() => setMode(null)}
+                            className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                        >
+                            ← Voltar
+                        </button>
+                        <div className={`${selectedCategory.color} text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg`}>
+                            {selectedCategory.name} - Vídeos
+                        </div>
+                    </div>
+
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+                            Assista aos vídeos:
+                        </h2>
+
+                        {videos.length === 0 ? (
+                            <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
+                                <PlayCircle className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+                                <p className="text-xl text-gray-500 font-medium">Nenhum vídeo disponível ainda.</p>
+                                <p className="text-gray-400 mt-2">Estamos preparando novidades para você!</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-12">
+                                {videos.map((video) => (
+                                    <div key={video.id} className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                                        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                                                <PlayCircle className="w-6 h-6 text-purple-500" />
+                                                {video.title || 'Vídeo de Aula'}
+                                            </h3>
+                                        </div>
+                                        <div className="aspect-video bg-black">
+                                            <iframe
+                                                src={`${video.video_url.includes('embed') ? video.video_url : video.video_url.replace('watch?v=', 'embed/')}`}
+                                                title={video.title || 'YouTube video player'}
+                                                className="w-full h-full"
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Show lesson with image and all audios listed below
     if (selectedLesson && mode && selectedCategory) {
         const audios = mode === 'class' ? selectedLesson.classAudios : selectedLesson.practiceAudios;
@@ -110,7 +191,7 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
 
                     {/* Main Content Card */}
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                        <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
                             {/* Image */}
                             <div className="aspect-video bg-gray-100 relative">
                                 {selectedLesson.image_url ? (
@@ -128,8 +209,13 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                     </div>
                                 )}
 
+                                {/* Lesson Indicator */}
+                                <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                    Lição {currentLessonIndex + 1} de {selectedCategory.lessons.length}
+                                </div>
+
                                 {/* Audio count indicator */}
-                                <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                                <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
                                     {audios.length} áudio{audios.length !== 1 ? 's' : ''}
                                 </div>
                             </div>
@@ -150,15 +236,15 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                             <div
                                                 key={audio.id}
                                                 className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${playingAudioId === audio.id
-                                                        ? 'bg-blue-50 border-2 border-blue-200'
-                                                        : 'bg-gray-50 hover:bg-gray-100'
+                                                    ? 'bg-blue-50 border-2 border-blue-200'
+                                                    : 'bg-gray-50 hover:bg-gray-100'
                                                     }`}
                                             >
                                                 <button
                                                     onClick={() => handlePlayAudio(audio)}
                                                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${playingAudioId === audio.id
-                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                                            : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                                                        : 'bg-gradient-to-r from-blue-500 to-purple-600'
                                                         } text-white hover:shadow-lg hover:scale-105`}
                                                 >
                                                     {playingAudioId === audio.id ? (
@@ -184,6 +270,30 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                 )}
                             </div>
                         </div>
+
+                        {/* Navigation Buttons */}
+                        <div className="flex gap-4">
+                            <button
+                                onClick={handlePrevLesson}
+                                disabled={!hasPrevLesson}
+                                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all ${hasPrevLesson
+                                    ? 'bg-white text-gray-700 shadow-md hover:shadow-xl hover:-translate-y-1'
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                    }`}
+                            >
+                                Anterior
+                            </button>
+                            <button
+                                onClick={handleNextLesson}
+                                disabled={!hasNextLesson}
+                                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all ${hasNextLesson
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                    }`}
+                            >
+                                Próxima
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,46 +313,60 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                             ← Voltar
                         </button>
                         <div className={`${selectedCategory.color} text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg`}>
-                            {selectedCategory.name}
+                            {selectedCategory.name} {mode === 'video' ? '- Vídeos' : ''}
                         </div>
                     </div>
 
                     <div className="max-w-4xl mx-auto">
                         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                            Escolha uma lição:
+                            Escolha como deseja estudar:
                         </h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {selectedCategory.lessons.map((lesson) => (
-                                <div
-                                    key={lesson.id}
-                                    className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all"
-                                >
-                                    <h3 className="text-xl font-bold text-gray-800 mb-4">{lesson.title}</h3>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => {
-                                                setSelectedLesson(lesson);
-                                                setMode('class');
-                                            }}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
-                                        >
-                                            <BookOpen className="w-5 h-5" />
-                                            Aula
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedLesson(lesson);
-                                                setMode('practice');
-                                            }}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
-                                        >
-                                            <PenTool className="w-5 h-5" />
-                                            Prática
-                                        </button>
-                                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <button
+                                onClick={() => {
+                                    if (selectedCategory.lessons.length > 0) {
+                                        setSelectedLesson(selectedCategory.lessons[0]);
+                                        setMode('class');
+                                    }
+                                }}
+                                className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-8 text-center border-b-8 border-blue-500 active:border-b-0 active:translate-y-2"
+                            >
+                                <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:rotate-6 transition-transform">
+                                    <BookOpen className="w-8 h-8 text-white" />
                                 </div>
-                            ))}
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Aula</h3>
+                                <p className="text-sm text-gray-600">Aprenda novos conteúdos</p>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    if (selectedCategory.lessons.length > 0) {
+                                        setSelectedLesson(selectedCategory.lessons[0]);
+                                        setMode('practice');
+                                    }
+                                }}
+                                className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-8 text-center border-b-8 border-emerald-500 active:border-b-0 active:translate-y-2"
+                            >
+                                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:-rotate-6 transition-transform">
+                                    <PenTool className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Prática</h3>
+                                <p className="text-sm text-gray-600">Exercite o que aprendeu</p>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setMode('video');
+                                }}
+                                className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-8 text-center border-b-8 border-purple-500 active:border-b-0 active:translate-y-2"
+                            >
+                                <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                    <Video className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Vídeos</h3>
+                                <p className="text-sm text-gray-600">Assista e aprenda</p>
+                            </button>
                         </div>
                     </div>
                 </div>

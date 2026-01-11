@@ -52,6 +52,16 @@ export interface LessonWithAudios extends Lesson {
   practiceAudios: LessonAudio[];
 }
 
+export interface ClassCategoryVideo {
+  id: string;
+  category_id: string;
+  video_url: string;
+  title: string | null;
+  order_index: number;
+  created_at: string;
+}
+
 export interface ClassCategoryWithLessons extends ClassCategory {
   lessons: LessonWithAudios[];
+  videos: ClassCategoryVideo[];
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, ClassCategory, Lesson, LessonAudio, ClassCategoryWithLessons, LessonWithAudios } from '../lib/supabase';
+import { supabase, ClassCategory, Lesson, LessonAudio, ClassCategoryWithLessons, LessonWithAudios, ClassCategoryVideo } from '../lib/supabase';
 
 // Cache to avoid refetching
 const categoriesCache: ClassCategoryWithLessons[] | null = null;
@@ -48,6 +48,17 @@ export const useClassCategories = () => {
 
                 if (audiosError) throw audiosError;
 
+                // Fetch all category videos
+                const { data: videosData, error: videosError } = await supabase
+                    .from('class_category_videos')
+                    .select('*')
+                    .order('order_index');
+
+                if (videosError) {
+                    console.warn('Error fetching class_category_videos:', videosError);
+                    // Don't throw if table doesn't exist yet, just use empty array
+                }
+
                 if (!isMounted) return;
 
                 // Group audios by lesson
@@ -77,10 +88,11 @@ export const useClassCategories = () => {
                     return acc;
                 }, {} as Record<string, LessonWithAudios[]>);
 
-                // Combine categories with their lessons
+                // Combine categories with their lessons and videos
                 const result: ClassCategoryWithLessons[] = (categoriesData as ClassCategory[]).map(category => ({
                     ...category,
                     lessons: lessonsByCategory[category.id] || [],
+                    videos: (videosData as ClassCategoryVideo[] || []).filter(v => v.category_id === category.id),
                 }));
 
                 setCategories(result);
