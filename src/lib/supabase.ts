@@ -32,6 +32,7 @@ export interface Lesson {
   category_id: string;
   lesson_number: string;
   title: string;
+  image_url: string | null;
   order_index: number;
   created_at: string;
 }
@@ -41,7 +42,6 @@ export interface LessonAudio {
   lesson_id: string;
   type: 'class' | 'practice';
   audio_url: string;
-  image_url: string | null;
   title: string | null;
   order_index: number;
   created_at: string;

@@ -1,16 +1,15 @@
 /*
-  # Add image_url to lesson_audios
+  # Add image_url to lessons
 
-  Adds an image_url column to the lesson_audios table to display
-  images alongside audio playback.
+  Adds an image_url column to the lessons table to display
+  an image for each lesson.
 */
 
--- Add image_url column to lesson_audios
-ALTER TABLE lesson_audios ADD COLUMN IF NOT EXISTS image_url text;
+-- Add image_url column to lessons
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS image_url text;
 
 -- Update existing records with placeholder image URLs
-UPDATE lesson_audios la
-SET image_url = '/images/' || c.slug || '/' || la.type || '/' || l.lesson_number || '.jpg'
-FROM lessons l
-JOIN class_categories c ON l.category_id = c.id
-WHERE la.lesson_id = l.id AND la.image_url IS NULL;
+UPDATE lessons l
+SET image_url = '/images/' || c.slug || '/' || l.lesson_number || '.jpg'
+FROM class_categories c
+WHERE l.category_id = c.id AND l.image_url IS NULL;

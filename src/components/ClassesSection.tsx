@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Users, School, BookOpen, PenTool, Play, Pause, ChevronRight, ChevronLeft, Loader2, Volume2 } from 'lucide-react';
+import { Users, School, BookOpen, PenTool, Play, Pause, ChevronRight, Loader2, Volume2 } from 'lucide-react';
 import { useClassCategories } from '../hooks/useClassCategories';
 import { ClassCategoryWithLessons, LessonWithAudios, LessonAudio } from '../lib/supabase';
 
@@ -18,15 +18,14 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
     const [selectedCategory, setSelectedCategory] = useState<ClassCategoryWithLessons | null>(null);
     const [selectedLesson, setSelectedLesson] = useState<LessonWithAudios | null>(null);
     const [mode, setMode] = useState<'class' | 'practice' | null>(null);
-    const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handlePlayAudio = (audio: LessonAudio) => {
         // If same audio is playing, pause it
-        if (isPlaying && audioRef.current) {
+        if (playingAudioId === audio.id && audioRef.current) {
             audioRef.current.pause();
-            setIsPlaying(false);
+            setPlayingAudioId(null);
             return;
         }
 
@@ -38,44 +37,23 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
         // Play new audio
         const newAudio = new Audio(audio.audio_url);
         audioRef.current = newAudio;
-        setIsPlaying(true);
+        setPlayingAudioId(audio.id);
 
         newAudio.play().catch((err) => {
             console.error('Error playing audio:', err);
-            setIsPlaying(false);
+            setPlayingAudioId(null);
         });
 
         newAudio.onended = () => {
-            setIsPlaying(false);
+            setPlayingAudioId(null);
         };
-    };
-
-    const handlePrevious = () => {
-        if (currentAudioIndex > 0) {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-            setIsPlaying(false);
-            setCurrentAudioIndex(currentAudioIndex - 1);
-        }
-    };
-
-    const handleNext = (audiosLength: number) => {
-        if (currentAudioIndex < audiosLength - 1) {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-            setIsPlaying(false);
-            setCurrentAudioIndex(currentAudioIndex + 1);
-        }
     };
 
     const handleBackFromAudio = () => {
         if (audioRef.current) {
             audioRef.current.pause();
         }
-        setIsPlaying(false);
-        setCurrentAudioIndex(0);
+        setPlayingAudioId(null);
         setSelectedLesson(null);
         setMode(null);
     };
@@ -110,26 +88,9 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
         );
     }
 
-    // Show audio player with image for a lesson
+    // Show lesson with image and all audios listed below
     if (selectedLesson && mode && selectedCategory) {
         const audios = mode === 'class' ? selectedLesson.classAudios : selectedLesson.practiceAudios;
-        const currentAudio = audios[currentAudioIndex];
-
-        if (!currentAudio) {
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-                    <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
-                        <p className="text-xl text-gray-600 mb-4">Nenhum áudio disponível</p>
-                        <button
-                            onClick={handleBackFromAudio}
-                            className="bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors"
-                        >
-                            Voltar
-                        </button>
-                    </div>
-                </div>
-            );
-        }
 
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -152,13 +113,12 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
                             {/* Image */}
                             <div className="aspect-video bg-gray-100 relative">
-                                {currentAudio.image_url ? (
+                                {selectedLesson.image_url ? (
                                     <img
-                                        src={currentAudio.image_url}
-                                        alt={currentAudio.title || 'Imagem da lição'}
+                                        src={selectedLesson.image_url}
+                                        alt={selectedLesson.title || 'Imagem da lição'}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
-                                            // Fallback for missing images
                                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Imagem+em+breve';
                                         }}
                                     />
@@ -168,89 +128,62 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                     </div>
                                 )}
 
-                                {/* Audio indicator */}
+                                {/* Audio count indicator */}
                                 <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                                    {currentAudioIndex + 1} / {audios.length}
+                                    {audios.length} áudio{audios.length !== 1 ? 's' : ''}
                                 </div>
                             </div>
 
-                            {/* Controls */}
+                            {/* Audio List */}
                             <div className="p-6">
-                                {/* Title */}
-                                <h3 className="text-xl font-bold text-gray-800 text-center mb-6">
-                                    {currentAudio.title || `Áudio ${currentAudioIndex + 1}`}
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                                    {mode === 'class' ? '📚 Áudios da Aula' : '✏️ Áudios da Prática'}
                                 </h3>
 
-                                {/* Audio Controls */}
-                                <div className="flex items-center justify-center gap-4 mb-6">
-                                    {/* Previous Button */}
-                                    <button
-                                        onClick={handlePrevious}
-                                        disabled={currentAudioIndex === 0}
-                                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${currentAudioIndex === 0
-                                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
-                                            }`}
-                                    >
-                                        <ChevronLeft className="w-8 h-8" />
-                                    </button>
-
-                                    {/* Play/Pause Button */}
-                                    <button
-                                        onClick={() => handlePlayAudio(currentAudio)}
-                                        className={`w-20 h-20 rounded-full flex items-center justify-center transition-all transform hover:scale-105 shadow-lg ${isPlaying
-                                                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                                : 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                            } text-white`}
-                                    >
-                                        {isPlaying ? (
-                                            <Pause className="w-10 h-10" />
-                                        ) : (
-                                            <Play className="w-10 h-10 ml-1" />
-                                        )}
-                                    </button>
-
-                                    {/* Next Button */}
-                                    <button
-                                        onClick={() => handleNext(audios.length)}
-                                        disabled={currentAudioIndex === audios.length - 1}
-                                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${currentAudioIndex === audios.length - 1
-                                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
-                                            }`}
-                                    >
-                                        <ChevronRight className="w-8 h-8" />
-                                    </button>
-                                </div>
-
-                                {/* Progress Dots */}
-                                {audios.length > 1 && (
-                                    <div className="flex justify-center gap-2">
-                                        {audios.map((_, index) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => {
-                                                    if (audioRef.current) {
-                                                        audioRef.current.pause();
-                                                    }
-                                                    setIsPlaying(false);
-                                                    setCurrentAudioIndex(index);
-                                                }}
-                                                className={`w-3 h-3 rounded-full transition-all ${index === currentAudioIndex
-                                                        ? 'bg-blue-500 scale-125'
-                                                        : 'bg-gray-300 hover:bg-gray-400'
+                                {audios.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-500">Nenhum áudio disponível ainda.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {audios.map((audio, index) => (
+                                            <div
+                                                key={audio.id}
+                                                className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${playingAudioId === audio.id
+                                                        ? 'bg-blue-50 border-2 border-blue-200'
+                                                        : 'bg-gray-50 hover:bg-gray-100'
                                                     }`}
-                                            />
+                                            >
+                                                <button
+                                                    onClick={() => handlePlayAudio(audio)}
+                                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${playingAudioId === audio.id
+                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                                                            : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                                        } text-white hover:shadow-lg hover:scale-105`}
+                                                >
+                                                    {playingAudioId === audio.id ? (
+                                                        <Pause className="w-5 h-5" />
+                                                    ) : (
+                                                        <Play className="w-5 h-5 ml-0.5" />
+                                                    )}
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-gray-800 truncate">
+                                                        {audio.title || `Áudio ${index + 1}`}
+                                                    </p>
+                                                    {playingAudioId === audio.id && (
+                                                        <p className="text-sm text-green-600 flex items-center gap-1">
+                                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                            Reproduzindo...
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         </div>
-
-                        {/* Helper text */}
-                        <p className="text-center text-gray-500 mt-4 text-sm">
-                            Use os botões ← → para navegar entre os áudios
-                        </p>
                     </div>
                 </div>
             </div>
@@ -291,7 +224,6 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                             onClick={() => {
                                                 setSelectedLesson(lesson);
                                                 setMode('class');
-                                                setCurrentAudioIndex(0);
                                             }}
                                             className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                                         >
@@ -302,7 +234,6 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                             onClick={() => {
                                                 setSelectedLesson(lesson);
                                                 setMode('practice');
-                                                setCurrentAudioIndex(0);
                                             }}
                                             className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                                         >
