@@ -41,6 +41,7 @@ export interface LessonAudio {
   lesson_id: string;
   type: 'class' | 'practice';
   audio_url: string;
+  image_url: string | null;
   title: string | null;
   order_index: number;
   created_at: string;
