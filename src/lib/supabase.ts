@@ -16,3 +16,41 @@ export interface LearningItem {
   order_index: number;
   created_at: string;
 }
+
+export interface ClassCategory {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface Lesson {
+  id: string;
+  category_id: string;
+  lesson_number: string;
+  title: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface LessonAudio {
+  id: string;
+  lesson_id: string;
+  type: 'class' | 'practice';
+  audio_url: string;
+  title: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface LessonWithAudios extends Lesson {
+  classAudios: LessonAudio[];
+  practiceAudios: LessonAudio[];
+}
+
+export interface ClassCategoryWithLessons extends ClassCategory {
+  lessons: LessonWithAudios[];
+}

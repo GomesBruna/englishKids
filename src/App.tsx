@@ -8,16 +8,19 @@ import { MemoryGame } from './components/MemoryGame';
 import { PronunciationGame } from './components/PronunciationGame';
 import { QuizGame } from './components/QuizGame';
 import { LoginPage } from './components/LoginPage';
+import { MainSectionSelector } from './components/MainSectionSelector';
+import { ClassesSection } from './components/ClassesSection';
 import { useLearningItems } from './hooks/useLearningItems';
 import { useAuth } from './contexts/AuthContext';
 
 //type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
 type Category = 'colors' | 'numbers' | 'animals' | ' fruits';
 type GameMode = 'learn' | 'memory' | 'pronunciation' | 'quiz' | 'video' | null;
+type MainSection = 'classes' | 'vocabulary' | null;
 
 const categories = [
   { id: 'colors' as Category, icon: Palette, label: 'Cores', color: 'bg-gradient-to-br from-red-400 to-pink-500', videoUrl: 'https://www.youtube.com/embed/SLZcWGQQsmg?si=dBv_FX9NTgEQlHLX' },
-  { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500', videoUrl: 'https://www.youtube.com/embed/o0IsBUaoTrQ?si=-_mWrNnpK_kBrPov'  },
+  { id: 'numbers' as Category, icon: Hash, label: 'Números', color: 'bg-gradient-to-br from-blue-400 to-cyan-500', videoUrl: 'https://www.youtube.com/embed/o0IsBUaoTrQ?si=-_mWrNnpK_kBrPov' },
   { id: 'animals' as Category, icon: Rabbit, label: 'Animais', color: 'bg-gradient-to-br from-green-400 to-emerald-500', videoUrl: 'https://www.youtube.com/embed/4jeHK_9NiXI?si=PV_jHNHRJ_lIkQrA' },
   { id: 'fruits' as Category, icon: Apple, label: 'Fruits', color: 'bg-gradient-to-br from-green-400 to-green-500', videoUrl: 'https://www.youtube.com/embed/mfReSbQ7jzE?si=iJAYpjNmff-VLOLG' }
   //{ id: 'pronouns' as Category, icon: Users, label: 'Pronomes', color: 'bg-gradient-to-br from-orange-400 to-amber-500' },
@@ -30,6 +33,7 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [mainSection, setMainSection] = useState<MainSection>(null);
 
   const { items, loading } = useLearningItems(selectedCategory || 'colors');
 
@@ -62,6 +66,7 @@ function App() {
     setShowCompletion(false);
     setSelectedCategory(null);
     setGameMode(null);
+    setMainSection(null);
   };
 
   const handleBackToModes = () => {
@@ -84,7 +89,8 @@ function App() {
     setShowCompletion(false);
   };
 
-  if (!selectedCategory) {
+  // Show main section selector (Aulas vs Vocabulário)
+  if (!mainSection) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <div className="container mx-auto px-4 py-12">
@@ -109,6 +115,53 @@ function App() {
             </p>
           </div>
 
+          <MainSectionSelector
+            onSelectClasses={() => setMainSection('classes')}
+            onSelectVocabulary={() => setMainSection('vocabulary')}
+          />
+
+          <div className="mt-16 text-center">
+            <div className="inline-block bg-white rounded-2xl shadow-lg p-8">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Como usar:</h3>
+              <ul className="text-left space-y-3 text-gray-600">
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">📚</span>
+                  <span><strong>Aulas:</strong> Aprenda com o livro de inglês</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🎮</span>
+                  <span><strong>Vocabulário:</strong> Aprenda palavras jogando</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show Classes section
+  if (mainSection === 'classes') {
+    return <ClassesSection onBack={() => setMainSection(null)} />;
+  }
+
+  // Show vocabulary categories
+  if (!selectedCategory) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={() => setMainSection(null)}
+              className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            >
+              ← Voltar
+            </button>
+            <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg">
+              Vocabulário
+            </div>
+          </div>
+
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
               Escolha uma categoria:
@@ -124,30 +177,6 @@ function App() {
                   isActive={false}
                 />
               ))}
-            </div>
-          </div>
-
-          <div className="mt-16 text-center">
-            <div className="inline-block bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Como jogar:</h3>
-              <ul className="text-left space-y-3 text-gray-600">
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">👆</span>
-                  <span>Escolha uma categoria</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">🎮</span>
-                  <span>Selecione um modo de jogo</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">🔊</span>
-                  <span>Ouça e pratique a pronúncia</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">⭐</span>
-                  <span>Ganhe pontos e aprenda se divertindo!</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
