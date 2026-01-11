@@ -32,7 +32,8 @@ export interface Lesson {
   category_id: string;
   lesson_number: string;
   title: string;
-  image_url: string | null;
+  class_image_url: string | null;
+  practice_image_url: string | null;
   order_index: number;
   created_at: string;
 }

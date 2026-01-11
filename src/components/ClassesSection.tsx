@@ -190,84 +190,115 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                     </div>
 
                     {/* Main Content Card */}
-                    <div className="max-w-2xl mx-auto">
-                        <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
-                            {/* Image */}
-                            <div className="aspect-video bg-gray-100 relative">
-                                {selectedLesson.image_url ? (
-                                    <img
-                                        src={selectedLesson.image_url}
-                                        alt={selectedLesson.title || 'Imagem da lição'}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Imagem+em+breve';
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                                        <Volume2 className="w-24 h-24 text-blue-300" />
-                                    </div>
-                                )}
-
+                    <div className="max-w-5xl mx-auto">
+                        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8 flex flex-col lg:flex-row">
+                            {/* Image Section */}
+                            <div className="lg:w-3/5 bg-gray-50 relative flex items-center justify-center p-6 border-b lg:border-b-0 lg:border-r border-gray-100 min-h-[350px] lg:min-h-[500px]">
                                 {/* Lesson Indicator */}
-                                <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                <div className="absolute top-6 left-6 z-10 bg-black/40 text-white px-4 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20">
                                     Lição {currentLessonIndex + 1} de {selectedCategory.lessons.length}
                                 </div>
 
                                 {/* Audio count indicator */}
-                                <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                                <div className="absolute top-6 right-6 z-10 bg-white/60 text-gray-800 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/40 shadow-sm">
                                     {audios.length} áudio{audios.length !== 1 ? 's' : ''}
                                 </div>
+
+                                {mode === 'class' ? (
+                                    selectedLesson.class_image_url ? (
+                                        <img
+                                            src={selectedLesson.class_image_url}
+                                            alt={selectedLesson.title || 'Imagem da aula'}
+                                            className="max-w-full max-h-[400px] object-contain rounded-xl shadow-sm"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Imagem+da+aula+em+breve';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl">
+                                            <Volume2 className="w-24 h-24 text-blue-300" />
+                                        </div>
+                                    )
+                                ) : (
+                                    selectedLesson.practice_image_url ? (
+                                        <img
+                                            src={selectedLesson.practice_image_url}
+                                            alt={selectedLesson.title || 'Imagem da prática'}
+                                            className="max-w-full max-h-[400px] object-contain rounded-xl shadow-sm"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Imagem+da+prática+em+breve';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl">
+                                            <PenTool className="w-24 h-24 text-emerald-300" />
+                                        </div>
+                                    )
+                                )}
                             </div>
 
-                            {/* Audio List */}
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">
-                                    {mode === 'class' ? '📚 Áudios da Aula' : '✏️ Áudios da Prática'}
-                                </h3>
+                            {/* Audio List Section */}
+                            <div className="lg:w-2/5 flex flex-col">
+                                <div className="p-8 flex flex-col h-full">
+                                    <h3 className="text-2xl font-black text-gray-800 mb-6 flex items-center gap-3">
+                                        {mode === 'class' ? (
+                                            <>
+                                                <span className="bg-blue-100 p-2 rounded-xl text-blue-600">📚</span>
+                                                Áudios da Aula
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="bg-emerald-100 p-2 rounded-xl text-emerald-600">✏️</span>
+                                                Áudios da Prática
+                                            </>
+                                        )}
+                                    </h3>
 
-                                {audios.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <p className="text-gray-500">Nenhum áudio disponível ainda.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {audios.map((audio, index) => (
-                                            <div
-                                                key={audio.id}
-                                                className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${playingAudioId === audio.id
-                                                    ? 'bg-blue-50 border-2 border-blue-200'
-                                                    : 'bg-gray-50 hover:bg-gray-100'
-                                                    }`}
-                                            >
-                                                <button
-                                                    onClick={() => handlePlayAudio(audio)}
-                                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${playingAudioId === audio.id
-                                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                                        : 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                                        } text-white hover:shadow-lg hover:scale-105`}
-                                                >
-                                                    {playingAudioId === audio.id ? (
-                                                        <Pause className="w-5 h-5" />
-                                                    ) : (
-                                                        <Play className="w-5 h-5 ml-0.5" />
-                                                    )}
-                                                </button>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-gray-800 truncate">
-                                                        {audio.title || `Áudio ${index + 1}`}
-                                                    </p>
-                                                    {playingAudioId === audio.id && (
-                                                        <p className="text-sm text-green-600 flex items-center gap-1">
-                                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                                            Reproduzindo...
-                                                        </p>
-                                                    )}
-                                                </div>
+                                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '450px' }}>
+                                        {audios.length === 0 ? (
+                                            <div className="text-center py-8">
+                                                <p className="text-gray-500">Nenhum áudio disponível ainda.</p>
                                             </div>
-                                        ))}
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {audios.map((audio, index) => (
+                                                    <div
+                                                        key={audio.id}
+                                                        className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${playingAudioId === audio.id
+                                                            ? 'bg-blue-50 border-2 border-blue-200 shadow-sm'
+                                                            : 'bg-gray-50 hover:bg-gray-100'
+                                                            }`}
+                                                    >
+                                                        <button
+                                                            onClick={() => handlePlayAudio(audio)}
+                                                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${playingAudioId === audio.id
+                                                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 shadow-green-200'
+                                                                : 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-blue-200'
+                                                                } text-white shadow-lg hover:scale-105 active:scale-95`}
+                                                        >
+                                                            {playingAudioId === audio.id ? (
+                                                                <Pause className="w-5 h-5" />
+                                                            ) : (
+                                                                <Play className="w-5 h-5 ml-0.5" />
+                                                            )}
+                                                        </button>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-gray-800 truncate">
+                                                                {audio.title || `Áudio ${index + 1}`}
+                                                            </p>
+                                                            {playingAudioId === audio.id && (
+                                                                <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                                                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                                    Ouvindo...
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
 
@@ -276,7 +307,7 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                             <button
                                 onClick={handlePrevLesson}
                                 disabled={!hasPrevLesson}
-                                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all ${hasPrevLesson
+                                className={`flex-1 flex items-center justify-center gap-2 py-5 rounded-2xl font-black text-lg transition-all ${hasPrevLesson
                                     ? 'bg-white text-gray-700 shadow-md hover:shadow-xl hover:-translate-y-1'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
                                     }`}
@@ -286,7 +317,7 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                             <button
                                 onClick={handleNextLesson}
                                 disabled={!hasNextLesson}
-                                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all ${hasNextLesson
+                                className={`flex-1 flex items-center justify-center gap-2 py-5 rounded-2xl font-black text-lg transition-all ${hasNextLesson
                                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
                                     }`}
@@ -351,7 +382,7 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
                                 <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:-rotate-6 transition-transform">
                                     <PenTool className="w-8 h-8 text-white" />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-2">Prática</h3>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Prática - Tarefa de Casa</h3>
                                 <p className="text-sm text-gray-600">Exercite o que aprendeu</p>
                             </button>
 
