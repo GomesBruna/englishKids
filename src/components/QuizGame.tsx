@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { LearningItem } from '../lib/supabase';
 import { speak } from '../utils/speech';
+import { useActivityLogger } from '../hooks/useActivityLogger';
 
 interface QuizGameProps {
   items: LearningItem[];
@@ -10,6 +11,7 @@ interface QuizGameProps {
 }
 
 export const QuizGame = ({ items, onComplete, onBack }: QuizGameProps) => {
+  const { logActivity } = useActivityLogger();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [options, setOptions] = useState<LearningItem[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -18,6 +20,9 @@ export const QuizGame = ({ items, onComplete, onBack }: QuizGameProps) => {
 
   useEffect(() => {
     generateOptions();
+    if (currentIndex === 0) {
+      logActivity('game_start', 'Quiz Game');
+    }
   }, [currentIndex]);
 
   const generateOptions = () => {
@@ -112,17 +117,16 @@ export const QuizGame = ({ items, onComplete, onBack }: QuizGameProps) => {
                 key={option.id}
                 onClick={() => handleOptionClick(option)}
                 disabled={selectedOption !== null}
-                className={`relative p-4 rounded-2xl transition-all duration-300 transform ${
-                  showResult
+                className={`relative p-4 rounded-2xl transition-all duration-300 transform ${showResult
                     ? isSelected && isCorrect
                       ? 'bg-green-400 scale-105 shadow-xl'
                       : isSelected && !isCorrect
-                      ? 'bg-red-400 scale-95'
-                      : isCurrentCorrect
-                      ? 'bg-green-400 shadow-xl'
-                      : 'bg-white'
+                        ? 'bg-red-400 scale-95'
+                        : isCurrentCorrect
+                          ? 'bg-green-400 shadow-xl'
+                          : 'bg-white'
                     : 'bg-white hover:scale-105 hover:shadow-xl'
-                } shadow-lg`}
+                  } shadow-lg`}
               >
                 <div className="aspect-square rounded-xl overflow-hidden mb-3">
                   <img

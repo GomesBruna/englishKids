@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Trophy, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { LearningItem } from '../lib/supabase';
 import { speak } from '../utils/speech';
+import { useActivityLogger } from '../hooks/useActivityLogger';
 
 interface MemoryGameProps {
   items: LearningItem[];
@@ -20,6 +21,7 @@ interface Card {
 }
 
 export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
+  const { logActivity } = useActivityLogger();
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -27,6 +29,7 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
 
   useEffect(() => {
     initializeGame();
+    logActivity('game_start', 'Memory Game');
   }, [items]);
 
   const initializeGame = () => {
@@ -39,7 +42,7 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
         itemId: item.id,
         isFlipped: false,
         isMatched: false,
-        spoke:item.english_word
+        spoke: item.english_word
       });
       gameCards.push({
         id: `image-${item.id}`,
@@ -48,7 +51,7 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
         itemId: item.id,
         isFlipped: false,
         isMatched: false,
-        spoke:item.english_word
+        spoke: item.english_word
       });
     });
 
@@ -145,13 +148,12 @@ export const MemoryGame = ({ items, onComplete, onBack }: MemoryGameProps) => {
               key={card.id}
               onClick={() => handleCardClick(index)}
               disabled={card.isMatched || card.isFlipped}
-              className={`aspect-square rounded-2xl transition-all duration-300 transform ${
-                card.isMatched
-                  ? 'bg-green-400 scale-95 opacity-50'
-                  : card.isFlipped
+              className={`aspect-square rounded-2xl transition-all duration-300 transform ${card.isMatched
+                ? 'bg-green-400 scale-95 opacity-50'
+                : card.isFlipped
                   ? 'bg-white shadow-xl scale-105'
                   : 'bg-gradient-to-br from-blue-400 to-purple-500 hover:scale-105 shadow-lg'
-              }`}
+                }`}
             >
               {card.isFlipped || card.isMatched ? (
                 <div className="w-full h-full flex items-center justify-center p-3">

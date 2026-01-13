@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Users, School, BookOpen, PenTool, Play, Pause, ChevronRight, Loader2, Volume2, PlayCircle, Video } from 'lucide-react';
 import { useClassCategories } from '../hooks/useClassCategories';
 import { ClassCategoryWithLessons, LessonWithAudios, LessonAudio } from '../lib/supabase';
+import { useActivityLogger } from '../hooks/useActivityLogger';
 
 // Icon mapping for dynamic icon rendering
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -14,6 +15,7 @@ interface ClassesSectionProps {
 }
 
 export function ClassesSection({ onBack }: ClassesSectionProps) {
+    const { logActivity } = useActivityLogger();
     const { categories, loading, error } = useClassCategories();
     const [selectedCategory, setSelectedCategory] = useState<ClassCategoryWithLessons | null>(null);
     const [selectedLesson, setSelectedLesson] = useState<LessonWithAudios | null>(null);
@@ -81,6 +83,11 @@ export function ClassesSection({ onBack }: ClassesSectionProps) {
     useEffect(() => {
         if (selectedLesson || mode) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (selectedLesson && mode) {
+            logActivity('lesson_view', `${selectedLesson.title} - ${mode}`);
+        } else if (selectedCategory && mode === 'video') {
+            logActivity('video_watch', `Category Video: ${selectedCategory.name}`);
         }
     }, [selectedLesson, mode]);
 

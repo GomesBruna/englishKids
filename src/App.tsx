@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Hash, Rabbit, Users, Trophy, BookOpen, Brain, Mic, Target, Sparkles, LogOut, PlayCircle, Apple } from 'lucide-react';
+import { Palette, Hash, Rabbit, Trophy, BookOpen, Brain, Target, Sparkles, LogOut, PlayCircle, Apple, TrendingUp } from 'lucide-react';
 import { CategoryButton } from './components/CategoryButton';
 import { LearningCard } from './components/LearningCard';
 import { ProgressBar } from './components/ProgressBar';
@@ -10,8 +10,10 @@ import { QuizGame } from './components/QuizGame';
 import { LoginPage } from './components/LoginPage';
 import { MainSectionSelector } from './components/MainSectionSelector';
 import { ClassesSection } from './components/ClassesSection';
+import { AdminDashboard } from './components/AdminDashboard';
 import { useLearningItems } from './hooks/useLearningItems';
 import { useAuth } from './contexts/AuthContext';
+import { useActivityLogger } from './hooks/useActivityLogger';
 
 //type Category = 'colors' | 'numbers' | 'animals' | 'pronouns';
 type Category = 'colors' | 'numbers' | 'animals' | ' fruits';
@@ -27,13 +29,15 @@ const categories = [
 ];
 
 function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
+  const { logActivity } = useActivityLogger();
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [gameMode, setGameMode] = useState<GameMode>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
   const [mainSection, setMainSection] = useState<MainSection>(null);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const { items, loading } = useLearningItems(selectedCategory || 'colors');
 
@@ -53,11 +57,15 @@ function App() {
   }
 
   const handleNext = () => {
-    setScore(score + 10);
+    const newScore = score + 10;
+    setScore(newScore);
     if (currentIndex < items.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       setShowCompletion(true);
+      if (selectedCategory) {
+        logActivity('game_complete', `${selectedCategory} - learn`, newScore);
+      }
     }
   };
 
@@ -79,6 +87,9 @@ function App() {
   const handleGameComplete = (finalScore: number) => {
     setScore(finalScore);
     setShowCompletion(true);
+    if (gameMode && selectedCategory) {
+      logActivity('game_complete', `${selectedCategory} - ${gameMode}`, finalScore);
+    }
   };
 
   const handleCategorySelect = (category: Category) => {
@@ -87,14 +98,29 @@ function App() {
     setCurrentIndex(0);
     setScore(0);
     setShowCompletion(false);
+    logActivity('vocabulary_view', category);
   };
+
+  // Show Admin Dashboard
+  if (showAdmin && profile?.is_admin) {
+    return <AdminDashboard onBack={() => setShowAdmin(false)} />;
+  }
 
   // Show main section selector (Aulas vs Vocabulário)
   if (!mainSection) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <div className="container mx-auto px-4 py-12">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-4 gap-3">
+            {profile?.is_admin && (
+              <button
+                onClick={() => setShowAdmin(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all font-medium"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Painel Admin
+              </button>
+            )}
             <button
               onClick={() => signOut()}
               className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all text-gray-700 font-medium"
@@ -139,6 +165,7 @@ function App() {
       </div>
     );
   }
+
 
   // Show Classes section
   if (mainSection === 'classes') {
