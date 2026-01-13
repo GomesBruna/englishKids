@@ -1,49 +1,57 @@
-let voices: SpeechSynthesisVoice[] = [];
+let currentAudio: HTMLAudioElement | null = null;
+const audioCache: Record<string, string> = {};
 
-// Pre-load voices for mobile browsers
-if ('speechSynthesis' in window) {
-  voices = window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => {
-    voices = window.speechSynthesis.getVoices();
-  };
-}
+/**
+ * Universal speak function that uses the Free Dictionary API for pronunciations.
+ * This is CORS-friendly and works reliably across all devices.
+ */
+export const speak = async (text: string) => {
+  if (!text.trim()) return;
 
-export const speak = (text: string) => {
-  if (!('speechSynthesis' in window)) return;
-
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
-
-  // Create utterance
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  // Set default properties
-  utterance.lang = 'en-US';
-  utterance.rate = 0.8;
-  utterance.pitch = 1.1;
-
-  // Try to find a good English voice (crucial for some mobile browsers)
-  const englishVoice = voices.find(v => v.lang.startsWith('en-US')) ||
-    voices.find(v => v.lang.startsWith('en')) ||
-    voices[0];
-
-  if (englishVoice) {
-    utterance.voice = englishVoice;
+  // Stop any currently playing audio
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
   }
 
-  // Workaround for some mobile browsers/TalkBack
-  // ensures we don't speak empty text and adds a tiny delay
-  // to prevent TalkBack from cutting off our audio
-  if (text.trim()) {
-    // Some browsers need a resume call if the audio context suspended
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
+  try {
+    let audioUrl = '';
+
+    // If it's already a URL (pre-recorded or from DB), use it directly
+    if (text.startsWith('http')) {
+      audioUrl = text;
+    } else {
+      const word = text.trim().toLowerCase();
+      if (audioCache[word]) {
+        audioUrl = audioCache[word];
+      } else {
+        // Fetch from Dictionary API
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Find the first available audio URL
+          for (const entry of data) {
+            if (entry.phonetics) {
+              const phoneticWithAudio = entry.phonetics.find((p: any) => p.audio && p.audio !== '');
+              if (phoneticWithAudio) {
+                audioUrl = phoneticWithAudio.audio;
+                break;
+              }
+            }
+          }
+          if (audioUrl) audioCache[word] = audioUrl;
+        }
+      }
     }
 
-    // A tiny delay (50ms) often helps TalkBack finish its own feedback 
-    // before the speech synthesis starts
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 50);
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      currentAudio = audio;
+      await audio.play();
+    } else {
+      console.warn('No audio found for:', text);
+    }
+  } catch (err) {
+    console.error('Failed to play audio:', err);
   }
 };
