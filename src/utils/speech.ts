@@ -14,44 +14,57 @@ export const speak = async (text: string) => {
     currentAudio = null;
   }
 
-  try {
-    let audioUrl = '';
+  const word = text.trim().toLowerCase();
 
-    // If it's already a URL (pre-recorded or from DB), use it directly
-    if (text.startsWith('http')) {
-      audioUrl = text;
-    } else {
-      const word = text.trim().toLowerCase();
-      if (audioCache[word]) {
-        audioUrl = audioCache[word];
-      } else {
-        // Fetch from Dictionary API
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-        if (response.ok) {
-          const data = await response.json();
-          // Find the first available audio URL
-          for (const entry of data) {
-            if (entry.phonetics) {
-              const phoneticWithAudio = entry.phonetics.find((p: any) => p.audio && p.audio !== '');
-              if (phoneticWithAudio) {
-                audioUrl = phoneticWithAudio.audio;
-                break;
-              }
-            }
+  // 1. Check Cache first
+  if (audioCache[word]) {
+    playAudio(audioCache[word]);
+    return;
+  }
+
+  // 2. Try Google Translate TTS (User Priority)
+  const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en&client=tw-ob`;
+
+  // We use a custom error handler to try the next source if Google fails/blocks
+  playAudio(googleUrl, async () => {
+    // 3. Fallback: Dictionary API (High Quality Human Voice)
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      if (response.ok) {
+        const data = await response.json();
+        for (const entry of data) {
+          const phoneticWithAudio = entry.phonetics?.find((p: any) => p.audio);
+          if (phoneticWithAudio) {
+            audioCache[word] = phoneticWithAudio.audio;
+            playAudio(phoneticWithAudio.audio);
+            return;
           }
-          if (audioUrl) audioCache[word] = audioUrl;
         }
       }
+    } catch (e) {
+      console.warn('Dictionary API fallback failed...');
     }
 
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      currentAudio = audio;
-      await audio.play();
-    } else {
-      console.warn('No audio found for:', text);
-    }
-  } catch (err) {
-    console.error('Failed to play audio:', err);
+    // 4. Final Fallback: StreamElements (Very CORS-friendly)
+    const streamElementsUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${encodeURIComponent(text)}`;
+    playAudio(streamElementsUrl);
+  });
+};
+
+const playAudio = (url: string, onError?: () => void) => {
+  const audio = new Audio(url);
+  currentAudio = audio;
+
+  // Set up error handling before playing
+  if (onError) {
+    audio.onerror = () => {
+      console.warn('Audio source failed:', url);
+      onError();
+    };
   }
+
+  audio.play().catch(err => {
+    console.error('Playback error for:', url, err);
+    if (onError) onError();
+  });
 };
