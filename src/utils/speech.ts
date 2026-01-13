@@ -31,9 +31,19 @@ export const speak = (text: string) => {
     utterance.voice = englishVoice;
   }
 
-  // Workaround for some mobile browsers where speak() must be called in a specific way
-  // and ensuring we don't speak empty text
+  // Workaround for some mobile browsers/TalkBack
+  // ensures we don't speak empty text and adds a tiny delay
+  // to prevent TalkBack from cutting off our audio
   if (text.trim()) {
-    window.speechSynthesis.speak(utterance);
+    // Some browsers need a resume call if the audio context suspended
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    // A tiny delay (50ms) often helps TalkBack finish its own feedback 
+    // before the speech synthesis starts
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   }
 };

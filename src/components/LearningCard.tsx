@@ -23,6 +23,13 @@ export const LearningCard = ({ item, onComplete }: LearningCardProps) => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
   const handleComplete = () => {
     setShowCheck(true);
     setTimeout(() => {
@@ -35,10 +42,14 @@ export const LearningCard = ({ item, onComplete }: LearningCardProps) => {
   return (
     <div className="relative w-full max-w-md mx-auto perspective-1000">
       <div
-        className={`relative w-full h-96 cursor-pointer transition-transform duration-500 transform-style-3d ${
-          isFlipped ? 'rotate-y-180' : ''
-        }`}
+        className={`relative w-full h-96 cursor-pointer transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''
+          }`}
         onClick={handleCardClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label={`${item.english_word}. ${isFlipped ? 'Flipped' : 'Clique para ouvir a pronúncia'}`}
+        aria-pressed={isFlipped}
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div
